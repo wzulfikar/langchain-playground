@@ -1,14 +1,15 @@
 from typing import Union
 from fastapi import FastAPI
+from src.handler import llm
 
 app = FastAPI()
 
 
-@app.get("/")
-def read_root():
-    return {"ok": True, "message": "Hello world!"}
+@app.get("/ping")
+def read_ping():
+    return {"ok": True, "message": "pong!"}
 
 
-@app.get("/items/{item_id}")
-def read_item(item_id: int, q: Union[str, None] = None):
-    return {"item_id": item_id, "q": q}
+@app.get("/api/llm")
+def predict_llm(text: str):
+    return llm.predict(text)
