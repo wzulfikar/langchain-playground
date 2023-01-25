@@ -1,6 +1,6 @@
 import logging
 import os
-from telegram.ext import filters, ApplicationBuilder, MessageHandler
+from telegram.ext import filters, ApplicationBuilder, MessageHandler, CommandHandler
 
 from src.bot_app import BotApp
 
@@ -15,7 +15,8 @@ if __name__ == '__main__':
 
     bot = BotApp()
 
-    # Handle any text message
+    # Add handlers
+    application.add_handler(CommandHandler("start", bot.handle_start))
     application.add_handler(MessageHandler(
         filters.TEXT & (~filters.COMMAND), bot.handle_text)
     )

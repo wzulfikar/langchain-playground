@@ -20,6 +20,7 @@ DEFAULT_PROMPT_TEMPLATE = """Assistant is a large language model trained by Open
   {history}
   Human: {human_input}
   Assistant:"""
+DEFAULT_START_MESSAGE = "Hello, I'm an AI-powered chatbot 😊\nSend me a message and I'll try to answer it."
 
 
 class BotApp:
@@ -29,6 +30,10 @@ class BotApp:
         self.prompt_template = os.environ.get(
             "PROMPT_TEMPLATE", DEFAULT_PROMPT_TEMPLATE)
         self.is_verbose = os.environ.get("VERBOSE") == "1"
+
+    async def handle_start(self, update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+        await ctx.bot.send_message(chat_id=update.effective_chat.id,
+                                   text=os.environ.get("START_MESSAGE", DEFAULT_START_MESSAGE))
 
     async def handle_text(self, update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         text = update.message.text
