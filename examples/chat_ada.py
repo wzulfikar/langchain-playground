@@ -33,7 +33,7 @@ def main():
         print("AI:")
         with get_openai_callback() as cb:
             output = chain.run(human_input)
-            print("  total_token:", cb.total_tokens)
+            print("  [INFO] total_token:", cb.total_tokens)
             print(output.strip())
 
 
