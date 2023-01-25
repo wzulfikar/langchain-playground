@@ -16,6 +16,7 @@ logging.basicConfig(
 
 class BotApp:
     def __init__(self):
+        # You can adjust the template as needed. Reload the bot to apply changes.
         self.template = """Assistant is a large language model trained by OpenAI.
   Assistant is designed to be able to assist with a wide range of tasks, from answering simple questions to providing in-depth explanations and discussions on a wide range of topics. As a language model, Assistant is able to generate human-like text based on the input it receives, allowing it to engage in natural-sounding conversations and provide responses that are coherent and relevant to the topic at hand.
   Assistant is constantly learning and improving, and its capabilities are constantly evolving. It is able to process and understand large amounts of text, and can use this knowledge to provide accurate and informative responses to a wide range of questions. Additionally, Assistant is able to generate its own text based on the input it receives, allowing it to engage in discussions and provide explanations and descriptions on a wide range of topics.
@@ -27,7 +28,6 @@ class BotApp:
         self.is_verbose = os.environ.get("VERBOSE") == "1"
 
     async def handle_text(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        """Handle simple message 'ping' to act as a health check"""
         text = update.message.text
 
         sender_id = update.message.from_user.id
