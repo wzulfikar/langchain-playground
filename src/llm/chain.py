@@ -12,6 +12,6 @@ def create_chain(template: str, verbose: False):
         llm=OpenAI(temperature=0),
         prompt=prompt,
         verbose=verbose,
-        memory=ConversationalBufferWindowMemory(k=2),
+        memory=ConversationalBufferWindowMemory(k=10),
     )
     return chatgpt_chain
