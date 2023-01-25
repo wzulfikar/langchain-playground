@@ -1,11 +1,12 @@
 # From https://langchain.readthedocs.io/en/latest/modules/memory/examples/chatgpt_clone.html
 
 import os
-from langchain import OpenAI, ConversationChain, LLMChain, PromptTemplate
+from langchain import OpenAI, LLMChain, PromptTemplate
 from langchain.chains.conversation.memory import ConversationalBufferWindowMemory
 
 
 def create_chain(template: str, verbose: bool = False):
+    """Create chat with prompt template and window memory"""
     prompt = PromptTemplate(
         input_variables=["history", "human_input"],
         template=template
