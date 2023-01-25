@@ -27,7 +27,7 @@ class BotApp:
         self.chains = {}
         self.is_verbose = os.environ.get("VERBOSE") == "1"
 
-    async def handle_text(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+    async def handle_text(self, update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         text = update.message.text
 
         sender_id = update.message.from_user.id
@@ -42,19 +42,19 @@ class BotApp:
             logging.info("  new chain created: %d", sender_id)
 
         if text == "ping":
-            await context.bot.send_message(chat_id=update.effective_chat.id,
+            await ctx.bot.send_message(chat_id=update.effective_chat.id,
                                            text="pong!")
         else:
             start_time = datetime.datetime.now()
 
             with get_openai_callback() as cb:
-                await context.bot.send_chat_action(chat_id=update.effective_chat.id,
+                await ctx.bot.send_chat_action(chat_id=update.effective_chat.id,
                                                    action="typing")
                 logging.info("  predicting...")
 
                 output = chain.predict(human_input=text)
                 bot_reply = output.strip()
-                await context.bot.send_message(chat_id=update.effective_chat.id,
+                await ctx.bot.send_message(chat_id=update.effective_chat.id,
                                                text=bot_reply)
 
                 logging.info("  human_input: %s", text)
