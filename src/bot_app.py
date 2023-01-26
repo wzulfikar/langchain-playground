@@ -39,17 +39,18 @@ class BotApp:
     async def handle_text(self, update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         text = update.message.text
 
-        sender_id = update.message.from_user.id
+        chat_id = update.message.chat.id
         sender_name = update.message.from_user.username or update.message.from_user.first_name
         is_group = update.message.chat.type == "group"
         is_reply = update.message.reply_to_message
 
         # Prepare session for the user
-        chain = self.chains.get(sender_id)
+        chain = self.chains.get(chat_id)
         if not chain:
+            # chain is unique per chat
             chain = create_chain(self.prompt_template, self.is_verbose)
-            self.chains[update.message.chat.id] = chain  # Chain is per chat
-            logging.info("  new chain created: %d", sender_id)
+            self.chains[chat_id] = chain
+            logging.info("  new chain created: %d", chat_id)
 
         if text.lower() == "ping":
             await ctx.bot.send_message(chat_id=update.effective_chat.id,
