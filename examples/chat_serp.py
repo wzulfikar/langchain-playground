@@ -14,7 +14,7 @@ def create_chain():
         tools,
         llm,
         agent="zero-shot-react-description",
-        verbose=os.environ.get("VERBOSE") == "!")
+        verbose=os.environ.get("VERBOSE") == "1")
     return agent
 
 
