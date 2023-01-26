@@ -1,5 +1,6 @@
 import logging
 import os
+from openai.error import OpenAIError
 from telegram import Update
 from telegram.ext import ContextTypes
 from src.llm.chain import create_chain
@@ -50,7 +51,7 @@ class BotApp:
             self.chains[update.message.chat.id] = chain  # Chain is per chat
             logging.info("  new chain created: %d", sender_id)
 
-        if text == "ping":
+        if text.lower() == "ping":
             await ctx.bot.send_message(chat_id=update.effective_chat.id,
                                        text="pong!")
         else:
@@ -67,7 +68,7 @@ class BotApp:
             if is_reply:
                 text = f"{text}: {update.message.reply_to_message.text}"
 
-            logging.info("[message] new %smessage from %s. predicting..",
+            logging.info("[message] new %smessage from %s",
                          "group " if is_group else "", sender_name)
 
             with get_openai_callback() as cb:
@@ -75,8 +76,13 @@ class BotApp:
                                                action="typing")
                 logging.info("  predicting...")
 
-                output = chain.predict(human_input=text)
-                bot_reply = output
+                try:
+                    output = chain.predict(human_input=text)
+                    bot_reply = output
+                except OpenAIError as e:
+                    logging.error("OpenAIError: %s", e)
+                    bot_reply = "Sorry, I seem to have some issues 😕\nPlease try again later."
+
                 await ctx.bot.send_message(chat_id=update.effective_chat.id,
                                            text=bot_reply)
 
