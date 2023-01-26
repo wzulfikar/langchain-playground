@@ -40,13 +40,14 @@ class BotApp:
 
         sender_id = update.message.from_user.id
         sender_name = update.message.from_user.username or update.message.from_user.first_name
-        logging.info("[message] new message from %s", sender_name)
+        is_group = update.message.chat.type == "group"
+        is_reply = update.message.reply_to_message
 
         # Prepare session for the user
         chain = self.chains.get(sender_id)
         if not chain:
             chain = create_chain(self.prompt_template, self.is_verbose)
-            self.chains[sender_id] = chain
+            self.chains[update.message.chat.id] = chain  # Chain is per chat
             logging.info("  new chain created: %d", sender_id)
 
         if text == "ping":
@@ -55,13 +56,27 @@ class BotApp:
         else:
             start_time = datetime.datetime.now()
 
+            if is_group:
+                # Skip if message is from group but doesn't have mention
+                if not text.startswith(f"@{ctx.bot.username}"):
+                    return
+                # Remove mention from the text
+                text = text[len(f"@{ctx.bot.username}") + 1:]
+
+            # Use reply text as prompt
+            if is_reply:
+                text = f"{text}: {update.message.reply_to_message.text}"
+
+            logging.info("[message] new %smessage from %s. predicting..",
+                         "group " if is_group else "", sender_name)
+
             with get_openai_callback() as cb:
                 await ctx.bot.send_chat_action(chat_id=update.effective_chat.id,
                                                action="typing")
                 logging.info("  predicting...")
 
                 output = chain.predict(human_input=text)
-                bot_reply = output.strip()
+                bot_reply = output
                 await ctx.bot.send_message(chat_id=update.effective_chat.id,
                                            text=bot_reply)
 
