@@ -1,9 +1,11 @@
 import logging
 import os
+import time
 from openai.error import OpenAIError
+import requests
 from telegram import Update
 from telegram.ext import ContextTypes
-from src.llm.chain import create_chain
+from src.qa.chain import create_chain
 
 # TODO: hide langchain from telegrambot.py
 import datetime
@@ -31,6 +33,18 @@ class BotApp:
         self.prompt_template = os.environ.get(
             "PROMPT_TEMPLATE", DEFAULT_PROMPT_TEMPLATE)
         self.is_verbose = os.environ.get("VERBOSE") == "1"
+        self.source_text = None
+        self.source_text_version = None
+
+    async def get_source_text(self):
+        QA_TEXT_URL = os.environ.get("QA_TEXT_URL")
+        if QA_TEXT_URL is None:
+            return None
+        print("[INFO] fetching source text from", QA_TEXT_URL)
+        version = int(time.time())
+        response = requests.get("{}?_v={}".format(QA_TEXT_URL, version))
+        self.source_text_version = version
+        return response.text
 
     async def handle_start(self, update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         await ctx.bot.send_message(chat_id=update.effective_chat.id,
@@ -44,11 +58,19 @@ class BotApp:
         is_group = update.message.chat.type == "group"
         is_reply = update.message.reply_to_message
 
+        # Refresh source_text every 60 seconds
+        if self.source_text is None or int(time.time()) - self.source_text_version >= 60:
+            self.source_text = await self.get_source_text()
+
         # Prepare session for the user
         chain = self.chains.get(chat_id)
         if not chain:
             # chain is unique per chat
-            chain = create_chain(self.prompt_template, self.is_verbose)
+            # chain = create_chain(self.prompt_template, self.is_verbose) # if using src.llm
+
+            chain = create_chain(
+                self.source_text, self.is_verbose)  # if using src.qa
+
             self.chains[chat_id] = chain
             logging.info("  new chain created: %d", chat_id)
 
