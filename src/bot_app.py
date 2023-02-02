@@ -38,8 +38,6 @@ class BotApp:
 
     async def get_source_text(self):
         QA_TEXT_URL = os.environ.get("QA_TEXT_URL")
-        if QA_TEXT_URL is None:
-            return None
         print("[INFO] fetching source text from", QA_TEXT_URL)
         version = int(time.time())
         response = requests.get("{}?_v={}".format(QA_TEXT_URL, version))
@@ -59,7 +57,9 @@ class BotApp:
         is_reply = update.message.reply_to_message
 
         # Refresh source_text every 60 seconds
-        if self.source_text_version is None or int(time.time()) - self.source_text_version >= 60:
+        if self.source_text is None:
+            self.source_text = await self.get_source_text()
+        if int(time.time()) - self.source_text_version >= 60:
             self.source_text = await self.get_source_text()
 
         # Prepare session for the user
