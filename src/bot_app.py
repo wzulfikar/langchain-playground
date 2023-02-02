@@ -36,11 +36,10 @@ class BotApp:
         self.source_text = None
         self.source_text_version = None
 
-    async def get_source_text(self):
-        QA_TEXT_URL = os.environ.get("QA_TEXT_URL")
-        print("[INFO] fetching source text from", QA_TEXT_URL)
+    async def get_source_text(self, source_text_url):
+        print("[INFO] fetching source text from", source_text_url)
         version = int(time.time())
-        response = requests.get("{}?_v={}".format(QA_TEXT_URL, version))
+        response = requests.get("{}?_v={}".format(source_text_url, version))
         self.source_text_version = version
         return response.text
 
@@ -57,10 +56,8 @@ class BotApp:
         is_reply = update.message.reply_to_message
 
         # Refresh source_text every 60 seconds
-        if self.source_text is None:
-            self.source_text = await self.get_source_text()
-        if int(time.time()) - self.source_text_version >= 60:
-            self.source_text = await self.get_source_text()
+        if self.source_text_version is None or int(time.time()) - self.source_text_version >= 60:
+            self.source_text = await self.get_source_text(os.environ.get("QA_TEXT_URL"))
 
         # Prepare session for the user
         chain = self.chains.get(chat_id)
