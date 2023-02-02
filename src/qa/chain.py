@@ -1,4 +1,3 @@
-import os
 from langchain.embeddings.openai import OpenAIEmbeddings
 from langchain.text_splitter import CharacterTextSplitter
 from langchain.vectorstores.faiss import FAISS
@@ -6,15 +5,19 @@ from langchain.chains import VectorDBQAWithSourcesChain
 from langchain import OpenAI
 
 
-def create_chain():
-    # Provide `FILEPATH` env to supply a custom file
-    filepath = os.environ.get('FILEPATH', 'fixtures/state_of_the_union.txt')
+class Predictor:
+    def __init__(self, chain):
+        self.chain = chain
 
-    print("[INFO] loading file:", filepath)
-    with open(filepath) as f:
-        state_of_the_union = f.read()
+    def predict(self, human_input):
+        output = self.chain({"question": human_input},
+                            return_only_outputs=True)
+        return output["answer"]
+
+
+def create_chain(source_text, _is_verbose=False):
     text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
-    texts = text_splitter.split_text(state_of_the_union)
+    texts = text_splitter.split_text(source_text)
 
     embeddings = OpenAIEmbeddings()
 
@@ -29,21 +32,5 @@ def create_chain():
     chain = VectorDBQAWithSourcesChain.from_chain_type(
         OpenAI(temperature=0), chain_type="stuff", vectorstore=docsearch)
 
-    print("[INFO] ready!")
-    return chain
-
-
-def main():
-    chain = create_chain()
-    # Start chat loop
-    while True:
-        print("Human:")
-        human_input = input()
-
-        print("AI:")
-        output = chain({"question": human_input}, return_only_outputs=True)
-        print(output)
-
-
-if __name__ == "__main__":
-    main()
+    print("[INFO] chain is ready!")
+    return Predictor(chain)
